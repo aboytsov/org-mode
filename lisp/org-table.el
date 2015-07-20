@@ -101,7 +101,7 @@ insertion of the tempate.  The transformed table will later be inserted
 between these lines.
 
 The template should also contain a minimal table in a multiline comment.
-If multiline comments are not possible in the buffer language, 
+If multiline comments are not possible in the buffer language,
 you can pack it into a string that will not be used when the code
 is compiled or executed.  Above the table will you need a line with
 the fixed string \"#+ORGTBL: SEND\", followed by instruction on how to
@@ -760,7 +760,8 @@ When nil, simply write \"#ERROR\" in corrupted fields.")
 	 emptystrings links dates emph raise narrow
 	 falign falign1 fmax f1 len c e space)
     (untabify beg end)
-    (remove-text-properties beg end '(org-cwidth t org-dwidth t display t))
+    (remove-text-properties beg end '(org-cwidth t org-dwidth t))
+;;    (remove-text-properties beg end '(org-cwidth t org-dwidth t display t))
     ;; Check if we have links or dates
     (goto-char beg)
     (setq links (re-search-forward org-bracket-link-regexp end t))
@@ -848,7 +849,12 @@ When nil, simply write \"#ERROR\" in corrupted fields.")
 				       (list 'display org-narrow-column-arrow)
 				       xx)))))
       ;; Get the maximum width for each column
-      (push (apply 'max (or fmax 1) 1 (mapcar 'org-string-width column))
+      (push (apply 'max (or fmax 1) 1
+		   (mapcar
+		    (lambda (s)
+		      (message "%S + %S" (org-string-width s) (calc-display-offset-str s))
+		      (+ (org-string-width s) (calc-display-offset-str s)))
+		    column))
 	    lengths)
       ;; Get the fraction of numbers, to decide about alignment of the column
       (if falign1
@@ -887,19 +893,32 @@ When nil, simply write \"#ERROR\" in corrupted fields.")
 				    (concat (car c) space))))))))
 
     ;; Compute the formats needed for output of the table
-    (setq rfmt (concat indent "|") hfmt (concat indent "|"))
-    (while (setq l (pop lengths))
-      (setq ty (if (pop typenums) "" "-")) ; number types flushright
-      (setq rfmt (concat rfmt (format rfmt1 ty l))
-	    hfmt (concat hfmt (format hfmt1 (make-string l ?-)))))
-    (setq rfmt (concat rfmt "\n")
-	  hfmt (concat (substring hfmt 0 -1) "|\n"))
+;;    (setq rfmt (concat indent "|") hfmt (concat indent "|"))
+    ;; (while (setq l (pop lengths))
+    ;;   (setq ty (if (pop typenums) "" "-")) ; number types flushright
+    ;;   (setq rfmt (concat rfmt (format rfmt1 ty l))
+    ;; 	    hfmt (concat hfmt (format hfmt1 (make-string l ?-)))))
+    ;; (setq rfmt (concat rfmt "\n")
+    ;; 	  hfmt (concat (substring hfmt 0 -1) "|\n"))
 
     (setq new (mapconcat
 	       (lambda (l)
-		 (if l (apply 'format rfmt
-			      (append (pop fields) emptystrings))
-		   hfmt))
+		 (setq tmp-hfmt hfmt)
+		 (setq tmp-rfmt (concat indent "|") tmp-hfmt (concat indent "|"))
+		 (setq lens lengths)
+		 (setq tnums typenums)
+		 (setq fs (append (pop fields) emptystrings))
+		 (setq tmp-fs fs)
+		 (while (setq len (pop lens))
+		   (setq f (pop tmp-fs))
+		   (setq ty (if (pop tnums) "" "-")) ; number types flushright
+		   (setq len (- len (calc-display-offset-str f)))
+		   (setq tmp-rfmt (concat tmp-rfmt (format rfmt1 ty len))
+			 tmp-hfmt (concat tmp-hfmt (format hfmt1 (make-string len ?-)))))
+		 (setq tmp-rfmt (concat tmp-rfmt "\n")
+		       tmp-hfmt (concat (substring tmp-hfmt 0 -1) "|\n"))
+		 (if l (apply 'format tmp-rfmt fs)
+		   tmp-hfmt))
 	       lines ""))
     (move-marker org-table-aligned-begin-marker (point))
     (insert new)
@@ -971,7 +990,13 @@ Optional argument NEW may specify text to replace the current field content."
 	    (progn
 	      (setq s (match-string 1)
 		    o (match-string 0)
-		    l (max 1 (- (match-end 0) (match-beginning 0) 3))
+		    l (max 1 (- (match-end 0) (match-beginning 0) 3
+				;; <CODE-CHANGE>
+			;;	(- (calc-display-offset-str s))
+				0
+				)
+			   )
+				;; <CODE-CHANGE>
 		    e (not (= (match-beginning 2) (match-end 2))))
 	      (setq f (format (if num " %%%ds %s" " %%-%ds %s")
 			      l (if e "|" (setq org-table-may-need-update t) ""))
@@ -4061,8 +4086,7 @@ Use COMMAND to do the motion, repeat if necessary to end up in a data line."
   "Matches a line belonging to an orgtbl.")
 
 (defconst orgtbl-extra-font-lock-keywords
-  (list (list (concat "^" orgtbl-line-start-regexp ".*")
-	      0 (quote 'org-table) 'prepend))
+  nil
   "Extra `font-lock-keywords' to be added when `orgtbl-mode' is active.")
 
 ;; Install it as a minor mode.
@@ -4159,14 +4183,14 @@ to execute outside of tables."
   "Setup orgtbl keymaps."
   (let ((nfunc 0)
 	(bindings
-	 '(([(meta shift left)]  org-table-delete-column)
-	   ([(meta left)]	 org-table-move-column-left)
-	   ([(meta right)]       org-table-move-column-right)
-	   ([(meta shift right)] org-table-insert-column)
-	   ([(meta shift up)]    org-table-kill-row)
-	   ([(meta shift down)]  org-table-insert-row)
-	   ([(meta up)]		 org-table-move-row-up)
-	   ([(meta down)]	 org-table-move-row-down)
+	 '(([(alt control left)]	 org-table-move-column-left)
+	   ([(alt control right)]       org-table-move-column-right)
+	   ([(alt control down)]	 org-table-move-row-down)
+	   ([(alt control up)]		 org-table-move-row-up)
+	   ([(alt control shift left)]  org-table-delete-column)
+	   ([(alt control shift right)] org-table-insert-column)
+	   ([(alt control shift down)]  org-table-insert-row)
+	   ([(alt control shift up)]    org-table-kill-row)
 	   ("\C-c\C-w"		 org-table-cut-region)
 	   ("\C-c\M-w"		 org-table-copy-region)
 	   ("\C-c\C-y"		 org-table-paste-rectangle)
