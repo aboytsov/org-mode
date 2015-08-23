@@ -846,7 +846,7 @@ When nil, simply write \"#ERROR\" in corrupted fields.")
 		  (setq f1 (min fmax (or (string-match org-bracket-link-regexp xx) fmax)))
 		  (unless (> f1 1)
 		    (user-error "Cannot narrow field starting with wide link \"%s\""
-				(match-string 0 xx)))
+                            (match-string 0 xx)))
 		  (add-text-properties f1 (length xx) (list 'org-cwidth t) xx)
 		  (add-text-properties (- f1 2) f1
 				       (list 'display org-narrow-column-arrow)
