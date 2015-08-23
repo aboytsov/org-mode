@@ -4183,10 +4183,10 @@ to execute outside of tables."
   "Setup orgtbl keymaps."
   (let ((nfunc 0)
 	(bindings
-	 '(([(alt control left)]	 org-table-move-column-left)
+	 '(([(alt control left)]	org-table-move-column-left)
 	   ([(alt control right)]       org-table-move-column-right)
-	   ([(alt control down)]	 org-table-move-row-down)
-	   ([(alt control up)]		 org-table-move-row-up)
+	   ([(alt control down)]	org-table-move-row-down)
+	   ([(alt control up)]		org-table-move-row-up)
 	   ([(alt control shift left)]  org-table-delete-column)
 	   ([(alt control shift right)] org-table-insert-column)
 	   ([(alt control shift down)]  org-table-insert-row)
