@@ -992,6 +992,9 @@ Optional argument NEW may specify text to replace the current field content."
 		    o (match-string 0)
 		    l (max 1 (- (match-end 0) (match-beginning 0) 3
 				;; <CODE-CHANGE>
+				;; TODO: finish, I think this has something to
+				;; do with calculating cell widht in case some
+				;; symbols are replaced
 			;;	(- (calc-display-offset-str s))
 				0
 				)
