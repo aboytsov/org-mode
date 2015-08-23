@@ -1,6 +1,6 @@
 ;;;; org-test.el --- Tests for Org-mode
 
-;; Copyright (c) 2010-2013 Sebastian Rose, Eric Schulte
+;; Copyright (c) 2010-2015 Sebastian Rose, Eric Schulte
 ;; Authors:
 ;;     Sebastian Rose, Hannover, Germany, sebastian_rose gmx de
 ;;     Eric Schulte, Santa Fe, New Mexico, USA, schulte.eric gmail com
@@ -52,7 +52,7 @@
       (require 'org-id)
       (require 'ox)
       (org-babel-do-load-languages
-       'org-babel-load-languages '((sh . t) (org . t))))
+       'org-babel-load-languages '((shell . t) (org . t))))
 
     (let* ((load-path (cons
 		       org-test-dir
@@ -205,31 +205,34 @@ mode holding TEXT.  If the string \"<point>\" appears in TEXT
 then remove it and place the point there before running BODY,
 otherwise place the point at the beginning of the inserted text."
   (declare (indent 1))
-  (let ((inside-text (if (stringp text) text (eval text))))
-    `(with-temp-buffer
+  `(let ((inside-text (if (stringp ,text) ,text (eval ,text)))
+	 (org-mode-hook nil))
+     (with-temp-buffer
        (org-mode)
-       ,(let ((point (string-match (regexp-quote "<point>") inside-text)))
-	  (if point
-	      `(progn (insert `(replace-match "" nil nil inside-text))
-		      (goto-char ,(match-beginning 0)))
-	    `(progn (insert ,inside-text)
-		    (goto-char (point-min)))))
+       (let ((point (string-match "<point>" inside-text)))
+	 (if point
+	     (progn
+	       (insert (replace-match "" nil nil inside-text))
+	       (goto-char (1+ (match-beginning 0))))
+	   (insert inside-text)
+	   (goto-char (point-min))))
        ,@body)))
 (def-edebug-spec org-test-with-temp-text (form body))
 
 (defmacro org-test-with-temp-text-in-file (text &rest body)
   "Run body in a temporary file buffer with Org-mode as the active mode."
   (declare (indent 1))
-  (let ((file (make-temp-file "org-test"))
-	(inside-text (if (stringp text) text (eval text)))
-	(results (gensym)))
-    `(let ((kill-buffer-query-functions nil) ,results)
-       (with-temp-file ,file (insert ,inside-text))
-       (find-file ,file)
+  (let ((results (gensym)))
+    `(let ((file (make-temp-file "org-test"))
+	   (kill-buffer-query-functions nil)
+	   (inside-text (if (stringp ,text) ,text (eval ,text)))
+	   ,results)
+       (with-temp-file file (insert inside-text))
+       (find-file file)
        (org-mode)
        (setq ,results (progn ,@body))
        (save-buffer) (kill-buffer (current-buffer))
-       (delete-file ,file)
+       (delete-file file)
        ,results)))
 (def-edebug-spec org-test-with-temp-text-in-file (form body))
 
@@ -252,6 +255,7 @@ or temporarily substitute the `org-test-with-temp-text' of this
 function with `org-test-with-temp-text-in-file'.  Also consider
 setting `pp-escape-newlines' to nil manually."
   (require 'pp)
+  (require 'ert)
   (let ((back pp-escape-newlines) (current-tblfm))
     (unless tblfm
       (should-not laps)
@@ -419,10 +423,11 @@ Load all test files first."
   (let ((org-id-track-globally t)
 	(org-test-selector
 	 (if org-test-selector org-test-selector "\\(org\\|ob\\)"))
-	org-confirm-babel-evaluate vc-handled-backends)
+	org-confirm-babel-evaluate org-startup-folded vc-handled-backends)
     (org-test-touch-all-examples)
     (org-test-update-id-locations)
     (org-test-load)
+    (message "selected tests: %s" org-test-selector)
     (ert-run-tests-batch-and-exit org-test-selector)))
 
 (defun org-test-run-all-tests ()
@@ -430,6 +435,7 @@ Load all test files first."
 Load all test files first."
   (interactive)
   (org-test-touch-all-examples)
+  (org-test-update-id-locations)
   (org-test-load)
   (ert "\\(org\\|ob\\)")
   (org-test-kill-all-examples))

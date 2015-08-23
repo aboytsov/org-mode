@@ -1,5 +1,5 @@
 ;;; org-mobile.el --- Code for asymmetric sync with a mobile device
-;; Copyright (C) 2009-2013 Free Software Foundation, Inc.
+;; Copyright (C) 2009-2015 Free Software Foundation, Inc.
 ;;
 ;; Author: Carsten Dominik <carsten at orgmode dot org>
 ;; Keywords: outlines, hypermedia, calendar, wp
@@ -425,7 +425,7 @@ agenda view showing the flagged items."
 	(def-tags (default-value 'org-tag-alist))
 	(target-file (expand-file-name org-mobile-index-file
 				       org-mobile-directory))
-	file link-name todo-kwds done-kwds tags drawers entry kwds dwds twds)
+	file link-name todo-kwds done-kwds tags entry kwds dwds twds)
     (when (stringp (car def-todo))
       (setq def-todo (list (cons 'sequence def-todo))))
     (org-agenda-prepare-buffers (mapcar 'car files-alist))
@@ -433,21 +433,20 @@ agenda view showing the flagged items."
     (setq todo-kwds (org-delete-all
 		     done-kwds
 		     (org-uniquify org-todo-keywords-for-agenda)))
-    (setq drawers (org-uniquify org-drawers-for-agenda))
     (setq tags (mapcar 'car (org-global-tags-completion-table
 			     (mapcar 'car files-alist))))
     (with-temp-file
 	(if org-mobile-use-encryption
 	    org-mobile-encryption-tempfile
 	  target-file)
+      (insert "#+READONLY\n")
       (while (setq entry (pop def-todo))
-	(insert "#+READONLY\n")
 	(setq kwds (mapcar (lambda (x) (if (string-match "(" x)
 					   (substring x 0 (match-beginning 0))
 					 x))
 			   (cdr entry)))
 	(insert "#+TODO: " (mapconcat 'identity kwds " ") "\n")
-	(setq dwds (member "|" kwds)
+	(setq dwds (or (member "|" kwds) (last kwds))
 	      twds (org-delete-all dwds kwds)
 	      todo-kwds (org-delete-all twds todo-kwds)
 	      done-kwds (org-delete-all dwds done-kwds)))
@@ -460,6 +459,7 @@ agenda view showing the flagged items."
 			      ((stringp x) x)
 			      ((eq (car x) :startgroup) "{")
 			      ((eq (car x) :endgroup) "}")
+			      ((eq (car x) :grouptags) nil)
 			      ((eq (car x) :newline) nil)
 			      ((listp x) (car x))))
 		      def-tags))
@@ -468,7 +468,6 @@ agenda view showing the flagged items."
       (setq tags (sort tags (lambda (a b) (string< (downcase a) (downcase b)))))
       (setq tags (append def-tags tags nil))
       (insert "#+TAGS: " (mapconcat 'identity tags " ") "\n")
-      (insert "#+DRAWERS: " (mapconcat 'identity drawers " ") "\n")
       (insert "#+ALLPRIORITIES: " org-mobile-allpriorities "\n")
       (when (file-exists-p (expand-file-name
 			    org-mobile-directory "agendas.org"))
@@ -500,7 +499,8 @@ agenda view showing the flagged items."
 	    (org-mobile-encrypt-and-move file target-path)
 	  (copy-file file target-path 'ok-if-exists))
 	(setq check (shell-command-to-string
-		     (concat org-mobile-checksum-binary " "
+		     (concat (shell-quote-argument org-mobile-checksum-binary)
+			     " "
 			     (shell-quote-argument (expand-file-name file)))))
 	(when (string-match "[a-fA-F0-9]\\{30,40\\}" check)
 	  (push (cons link-name (match-string 0 check))
@@ -1073,7 +1073,7 @@ be returned that indicates what went wrong."
 	    ;; which prevents correct insertion when point is invisible
 	    (org-show-subtree)
 	    (end-of-line 1)
-	    (org-insert-heading-respect-content '(16) t)
+	    (org-insert-heading-respect-content t)
 	    (org-demote))
 	(beginning-of-line)
 	(insert "* "))

@@ -1,6 +1,6 @@
 ;;; ob-clojure.el --- org-babel functions for clojure evaluation
 
-;; Copyright (C) 2009-2013 Free Software Foundation, Inc.
+;; Copyright (C) 2009-2015 Free Software Foundation, Inc.
 
 ;; Author: Joel Boehland, Eric Schulte, Oleh Krehel
 ;;
@@ -24,29 +24,28 @@
 
 ;;; Commentary:
 
-;;; support for evaluating clojure code, relies either on slime or
-;;; on nrepl for all eval
+;; Support for evaluating clojure code
 
-;;; Requirements:
+;; Requirements:
 
-;;; - clojure (at least 1.2.0)
-;;; - clojure-mode
-;;; - either slime or nrepl
+;; - clojure (at least 1.2.0)
+;; - clojure-mode
+;; - either cider or SLIME
 
-;;; For SLIME-way, the best way to install these components is by
-;;; following the directions as set out by Phil Hagelberg (Technomancy)
-;;; on the web page: http://technomancy.us/126
+;; For Cider, see https://github.com/clojure-emacs/cider
 
-;;; For nREPL-way:
-;;; get clojure is with https://github.com/technomancy/leiningen
-;;; get nrepl from MELPA (clojure-mode is a dependency).
+;; For SLIME, the best way to install these components is by following
+;; the directions as set out by Phil Hagelberg (Technomancy) on the
+;; web page: http://technomancy.us/126
 
 ;;; Code:
 (require 'ob)
+(eval-when-compile
+  (require 'cl))
 
+(declare-function nrepl-dict-get "ext:nrepl-client" (dict key))
+(declare-function nrepl-sync-request:eval "ext:nrepl-client" (input &optional ns session))
 (declare-function slime-eval "ext:slime" (sexp &optional package))
-(declare-function nrepl-current-connection-buffer "ext:nrepl" ())
-(declare-function nrepl-eval "ext:nrepl" (body))
 
 (defvar org-babel-tangle-lang-exts)
 (add-to-list 'org-babel-tangle-lang-exts '("clojure" . "clj"))
@@ -54,10 +53,14 @@
 (defvar org-babel-default-header-args:clojure '())
 (defvar org-babel-header-args:clojure '((package . :any)))
 
-(defcustom org-babel-clojure-backend 'nrepl
+(defcustom org-babel-clojure-backend
+  (cond ((featurep 'cider) 'cider)
+	(t 'slime))
   "Backend used to evaluate Clojure code blocks."
   :group 'org-babel
-  :type 'symbol)
+  :type '(choice
+	  (const :tag "cider" cider)
+	  (const :tag "SLIME" slime)))
 
 (defun org-babel-expand-body:clojure (body params)
   "Expand BODY according to PARAMS, return the expanded body."
@@ -73,46 +76,40 @@
 			     vars "\n      ")
 			    "]\n" body ")")
 		  body))))
-    (cond ((or (member "code" result-params) (member "pp" result-params))
-	   (format (concat "(let [org-mode-print-catcher (java.io.StringWriter.)] "
-			   "(clojure.pprint/with-pprint-dispatch clojure.pprint/%s-dispatch "
-			   "(clojure.pprint/pprint (do %s) org-mode-print-catcher) "
-			   "(str org-mode-print-catcher)))")
-		   (if (member "code" result-params) "code" "simple") body))
-	  ;; if (:results output), collect printed output
-	  ((member "output" result-params)
-	   (format "(clojure.core/with-out-str %s)" body))
-	  (t body))))
+    (if (or (member "code" result-params)
+	    (member "pp" result-params))
+	(format "(clojure.pprint/pprint (do %s))" body)
+      body)))
 
 (defun org-babel-execute:clojure (body params)
   "Execute a block of Clojure code with Babel."
-  (let ((expanded (org-babel-expand-body:clojure body params)))
+  (let ((expanded (org-babel-expand-body:clojure body params))
+	result)
     (case org-babel-clojure-backend
+      (cider
+       (require 'cider)
+       (let ((result-params (cdr (assoc :result-params params))))
+	 (setq result
+	       (nrepl-dict-get
+		(nrepl-sync-request:eval expanded)
+		(if (or (member "output" result-params)
+			(member "pp" result-params))
+		    "out"
+		  "value")))))
       (slime
        (require 'slime)
        (with-temp-buffer
-	 (insert expanded)
-	 ((lambda (result)
-	    (let ((result-params (cdr (assoc :result-params params))))
-	      (org-babel-result-cond result-params
-		result
-		(condition-case nil (org-babel-script-escape result)
-		  (error result)))))
-	  (slime-eval
-	   `(swank:eval-and-grab-output
-	     ,(buffer-substring-no-properties (point-min) (point-max)))
-	   (cdr (assoc :package params))))))
-      (nrepl
-       (require 'nrepl)
-       (if (nrepl-current-connection-buffer)
-	   (let* ((result (nrepl-eval expanded))
-		  (s (plist-get result :stdout))
-		  (r (plist-get result :value)))
-	     (if s (concat s "\n" r) r))
-	 (error "nREPL not connected! Use M-x nrepl-jack-in."))))))
+    	 (insert expanded)
+	 (setq result
+	       (slime-eval
+		`(swank:eval-and-grab-output
+		  ,(buffer-substring-no-properties (point-min) (point-max)))
+		(cdr (assoc :package params)))))))
+    (org-babel-result-cond (cdr (assoc :result-params params))
+      result
+      (condition-case nil (org-babel-script-escape result)
+	(error result)))))
 
 (provide 'ob-clojure)
-
-
 
 ;;; ob-clojure.el ends here
