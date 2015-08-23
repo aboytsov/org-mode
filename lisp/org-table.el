@@ -1110,28 +1110,28 @@ to a number.  In the case of a timestamp, increment by days."
 	 txt txt-up inc)
     (org-table-check-inside-data-field)
     (if (not non-empty)
-	(save-excursion
-	  (setq txt
-		(catch 'exit
-		  (while (progn (beginning-of-line 1)
-				(re-search-backward org-table-dataline-regexp
-						    beg t))
-		    (org-table-goto-column colpos t)
-		    (if (and (looking-at
-			      "|[ \t]*\\([^| \t][^|]*?\\)[ \t]*|")
-			     (<= (setq n (1- n)) 0))
-			(throw 'exit (match-string 1))))))
-	  (setq field-up
-		(catch 'exit
-		  (while (progn (beginning-of-line 1)
-				(re-search-backward org-table-dataline-regexp
-						    beg t))
-		    (org-table-goto-column colpos t)
-		    (if (and (looking-at
-			      "|[ \t]*\\([^| \t][^|]*?\\)[ \t]*|")
-			     (<= (setq n (1- n)) 0))
-			(throw 'exit (match-string 1))))))
-	  (setq non-empty-up (and field-up (string-match "[^ \t]" field-up))))
+      (save-excursion
+	(setq txt
+	      (catch 'exit
+		(while (progn (beginning-of-line 1)
+			      (re-search-backward org-table-dataline-regexp
+						  beg t))
+		  (org-table-goto-column colpos t)
+		  (if (and (looking-at
+			    "|[ \t]*\\([^| \t][^|]*?\\)[ \t]*|")
+			   (<= (setq n (1- n)) 0))
+		      (throw 'exit (match-string 1))))))
+	(setq field-up
+	      (catch 'exit
+		(while (progn (beginning-of-line 1)
+			      (re-search-backward org-table-dataline-regexp
+						  beg t))
+		  (org-table-goto-column colpos t)
+		  (if (and (looking-at
+			    "|[ \t]*\\([^| \t][^|]*?\\)[ \t]*|")
+			   (<= (setq n (1- n)) 0))
+		      (throw 'exit (match-string 1))))))
+	(setq non-empty-up (and field-up (string-match "[^ \t]" field-up))))
       ;; Above field was not empty, go down to the next row
       (setq txt (org-trim field))
       (org-table-next-row)
@@ -3398,7 +3398,7 @@ borders of the table using the @< @> $< $> makers."
 		  (- nmax len -1)))
 	(if (or (< n 1) (> n nmax))
 	    (user-error "Reference \"%s\" in expression \"%s\" points outside table"
-			(match-string 0 s) s))
+		   (match-string 0 s) s))
 	(setq start (match-beginning 0))
 	(setq s (replace-match (format "%s%d" (match-string 1 s) n) t t s)))))
   s)
@@ -4804,12 +4804,12 @@ This may be either a string or a function of two arguments:
 		(unless (wholenump skip) (user-error "Wrong :skip value"))
 		(let ((n 0))
 		  (org-element-map tree 'table-row
-				   (lambda (row)
-				     (if (>= n skip) t
-				       (org-element-extract-element row)
-				       (incf n)
-				       nil))
-				   info t))
+		    (lambda (row)
+		      (if (>= n skip) t
+			(org-element-extract-element row)
+			(incf n)
+			nil))
+		    info t))
 		tree)))
 	  ;; Handle :skipcols parameter.
 	  (lambda (tree backend info)
@@ -4817,18 +4817,18 @@ This may be either a string or a function of two arguments:
 	      (when skipcols
 		(unless (consp skipcols) (user-error "Wrong :skipcols value"))
 		(org-element-map tree 'table
-				 (lambda (table)
-				   (let ((specialp
-					  (org-export-table-has-special-column-p table)))
-				     (dolist (row (org-element-contents table))
-				       (when (eq (org-element-property :type row) 'standard)
-					 (let ((c 1))
-					   (dolist (cell (nthcdr (if specialp 1 0)
-								 (org-element-contents row)))
-					     (when (memq c skipcols)
-					       (org-element-extract-element cell))
-					     (incf c)))))))
-				 info)
+		  (lambda (table)
+		    (let ((specialp
+			   (org-export-table-has-special-column-p table)))
+		      (dolist (row (org-element-contents table))
+			(when (eq (org-element-property :type row) 'standard)
+			  (let ((c 1))
+			    (dolist (cell (nthcdr (if specialp 1 0)
+						  (org-element-contents row)))
+			      (when (memq c skipcols)
+				(org-element-extract-element cell))
+			      (incf c)))))))
+		  info)
 		tree)))))
        :transcoders
        `((table . ,(org-table--to-generic-table params))
@@ -4902,18 +4902,18 @@ information."
 	     ;; `:lstart', `:lend' and their relatives.
 	     ,(let ((cells
 		     '(org-element-map row 'table-cell
-				       (lambda (cell)
-					 ;; Export all cells, without separators.
-					 ;;
-					 ;; Use `org-export-data-with-backend'
-					 ;; instead of `org-export-data' to eschew
-					 ;; cached values, which
-					 ;; ignore :orgtbl-ignore-sep parameter.
-					 (org-export-data-with-backend
-					  cell
-					  (plist-get info :back-end)
-					  (org-combine-plists info '(:orgtbl-ignore-sep t))))
-				       info)))
+			(lambda (cell)
+			  ;; Export all cells, without separators.
+			  ;;
+			  ;; Use `org-export-data-with-backend'
+			  ;; instead of `org-export-data' to eschew
+			  ;; cached values, which
+			  ;; ignore :orgtbl-ignore-sep parameter.
+			  (org-export-data-with-backend
+			   cell
+			   (plist-get info :back-end)
+			   (org-combine-plists info '(:orgtbl-ignore-sep t))))
+			info)))
 		`(cond
 		  ,(and hllfmt
 			`(last-header-p ,(org-table--generic-apply

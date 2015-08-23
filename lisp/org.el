@@ -13774,29 +13774,29 @@ EXTRA is additional text that will be inserted into the notes buffer."
       (when lines
 	(with-current-buffer (marker-buffer org-log-note-marker)
 	  (org-with-wide-buffer
-	   (goto-char org-log-note-marker)
-	   (move-marker org-log-note-marker nil)
-	   ;; Make sure point is at the beginning of an empty line.
-	   (cond ((not (bolp)) (let ((inhibit-read-only t)) (insert "\n")))
-		 ((looking-at "[ \t]*\\S-") (save-excursion (insert "\n"))))
-	   ;; In an existing list, add a new item at the top level.
-	   ;; Otherwise, indent line like a regular one.
-	   (let ((itemp (org-in-item-p)))
-	     (if itemp
-		 (org-indent-line-to
-		  (let ((struct (save-excursion
-				  (goto-char itemp) (org-list-struct))))
-		    (org-list-get-ind (org-list-get-top-point struct) struct)))
-	       (org-indent-line)))
-	   (insert (org-list-bullet-string "-") (pop lines))
-	   (let ((ind (org-list-item-body-column (line-beginning-position))))
-	     (dolist (line lines)
-	       (insert "\n")
-	       (org-indent-line-to ind)
-	       (insert line)))
-	   (message "Note stored")
-	   (org-back-to-heading t)
-	   (org-cycle-hide-drawers 'children))
+	    (goto-char org-log-note-marker)
+	    (move-marker org-log-note-marker nil)
+	    ;; Make sure point is at the beginning of an empty line.
+	    (cond ((not (bolp)) (let ((inhibit-read-only t)) (insert "\n")))
+		  ((looking-at "[ \t]*\\S-") (save-excursion (insert "\n"))))
+	    ;; In an existing list, add a new item at the top level.
+	    ;; Otherwise, indent line like a regular one.
+	    (let ((itemp (org-in-item-p)))
+	      (if itemp
+		  (org-indent-line-to
+		   (let ((struct (save-excursion
+				   (goto-char itemp) (org-list-struct))))
+		     (org-list-get-ind (org-list-get-top-point struct) struct)))
+		(org-indent-line)))
+	    (insert (org-list-bullet-string "-") (pop lines))
+	    (let ((ind (org-list-item-body-column (line-beginning-position))))
+	      (dolist (line lines)
+		(insert "\n")
+		(org-indent-line-to ind)
+		(insert line)))
+	    (message "Note stored")
+	    (org-back-to-heading t)
+	    (org-cycle-hide-drawers 'children))
 	  ;; Fix `buffer-undo-list' when `org-store-log-note' is called
 	  ;; from within `org-add-log-note' because `buffer-undo-list'
 	  ;; is then modified outside of `org-with-remote-undo'.
@@ -18845,10 +18845,10 @@ environment remains unintended."
 	 (lines (when inserted
 		  (save-excursion
 		    (- (loop while (< beg (point))
-			     with x = 0
-			     do (forward-line -1)
-			     (incf x)
-			     finally return x)
+				with x = 0
+				do (forward-line -1)
+				(incf x)
+				finally return x)
 		       (if (progn (goto-char beg)
 				  (and (progn (skip-chars-forward " \t") (eolp))
 				       (progn (skip-chars-backward " \t") (bolp))))
@@ -19187,9 +19187,9 @@ inspection."
 	 (cmd (format-spec
 	       org-latex-to-mathml-convert-command
 	       `((?j . ,(and org-latex-to-mathml-jar-file
-			     (shell-quote-argument
-			      (expand-file-name
-			       org-latex-to-mathml-jar-file))))
+			 (shell-quote-argument
+			  (expand-file-name
+			   org-latex-to-mathml-jar-file))))
 		 (?I . ,(shell-quote-argument tmp-in-file))
 		 (?i . ,latex-frag)
 		 (?o . ,(shell-quote-argument tmp-out-file)))))
@@ -22066,112 +22066,112 @@ With prefix arg UNCOMPILED, load the uncompiled versions."
 	   ["Reset to Current" Custom-reset-current t]
 	   ["Reset to Saved" Custom-reset-saved t]
 	   ["Reset to Standard Settings" Custom-reset-standard t]))
-(message "\"Org\"-menu now contains full customization menu"))
-(error "Cannot expand menu (outdated version of cus-edit.el)")))
+	(message "\"Org\"-menu now contains full customization menu"))
+    (error "Cannot expand menu (outdated version of cus-edit.el)")))
 
 ;;;; Miscellaneous stuff
 
 ;;; Generally useful functions
 
 (defsubst org-get-at-eol (property n)
-"Get text property PROPERTY at the end of line less N characters."
-(get-text-property (- (point-at-eol) n) property))
+  "Get text property PROPERTY at the end of line less N characters."
+  (get-text-property (- (point-at-eol) n) property))
 
 (defun org-find-text-property-in-string (prop s)
-"Return the first non-nil value of property PROP in string S."
-(or (get-text-property 0 prop s)
-(get-text-property (or (next-single-property-change 0 prop s) 0)
-prop s)))
+  "Return the first non-nil value of property PROP in string S."
+  (or (get-text-property 0 prop s)
+      (get-text-property (or (next-single-property-change 0 prop s) 0)
+			 prop s)))
 
 (defun org-display-warning (message) ;; Copied from Emacs-Muse
-"Display the given MESSAGE as a warning."
-(if (fboundp 'display-warning)
-(display-warning 'org message
-(if (featurep 'xemacs) 'warning :warning))
-(let ((buf (get-buffer-create "*Org warnings*")))
-(with-current-buffer buf
-  (goto-char (point-max))
-  (insert "Warning (Org): " message)
-  (unless (bolp)
-    (newline)))
-(display-buffer buf)
-(sit-for 0))))
+  "Display the given MESSAGE as a warning."
+  (if (fboundp 'display-warning)
+      (display-warning 'org message
+                       (if (featurep 'xemacs) 'warning :warning))
+    (let ((buf (get-buffer-create "*Org warnings*")))
+      (with-current-buffer buf
+        (goto-char (point-max))
+        (insert "Warning (Org): " message)
+        (unless (bolp)
+          (newline)))
+      (display-buffer buf)
+      (sit-for 0))))
 
 (defun org-eval (form)
-"Eval FORM and return result."
-(condition-case error
-(eval form)
-(error (format "%%![Error: %s]" error))))
+  "Eval FORM and return result."
+  (condition-case error
+      (eval form)
+    (error (format "%%![Error: %s]" error))))
 
 (defun org-in-clocktable-p ()
-"Check if the cursor is in a clocktable."
-(let ((pos (point)) start)
-(save-excursion
-(end-of-line 1)
-(and (re-search-backward "^[ \t]*#\\+BEGIN:[ \t]+clocktable" nil t)
-     (setq start (match-beginning 0))
-     (re-search-forward "^[ \t]*#\\+END:.*" nil t)
-     (>= (match-end 0) pos)
-     start))))
+  "Check if the cursor is in a clocktable."
+  (let ((pos (point)) start)
+    (save-excursion
+      (end-of-line 1)
+      (and (re-search-backward "^[ \t]*#\\+BEGIN:[ \t]+clocktable" nil t)
+	   (setq start (match-beginning 0))
+	   (re-search-forward "^[ \t]*#\\+END:.*" nil t)
+	   (>= (match-end 0) pos)
+	   start))))
 
 (defun org-in-verbatim-emphasis ()
-(save-match-data
-(and (org-in-regexp org-emph-re 2)
-(>= (point) (match-beginning 3))
-(<= (point) (match-end 4))
-(member (match-string 3) '("=" "~")))))
+  (save-match-data
+    (and (org-in-regexp org-emph-re 2)
+	 (>= (point) (match-beginning 3))
+	 (<= (point) (match-end 4))
+	 (member (match-string 3) '("=" "~")))))
 
 (defun org-goto-marker-or-bmk (marker &optional bookmark)
-"Go to MARKER, widen if necessary.  When marker is not live, try BOOKMARK."
-(if (and marker (marker-buffer marker)
-(buffer-live-p (marker-buffer marker)))
-(progn
-(org-pop-to-buffer-same-window (marker-buffer marker))
-(if (or (> marker (point-max)) (< marker (point-min)))
-    (widen))
-(goto-char marker)
-(org-show-context 'org-goto))
-(if bookmark
-(bookmark-jump bookmark)
-(error "Cannot find location"))))
+  "Go to MARKER, widen if necessary.  When marker is not live, try BOOKMARK."
+  (if (and marker (marker-buffer marker)
+	   (buffer-live-p (marker-buffer marker)))
+      (progn
+	(org-pop-to-buffer-same-window (marker-buffer marker))
+	(if (or (> marker (point-max)) (< marker (point-min)))
+	    (widen))
+	(goto-char marker)
+	(org-show-context 'org-goto))
+    (if bookmark
+	(bookmark-jump bookmark)
+      (error "Cannot find location"))))
 
 (defun org-quote-csv-field (s)
-"Quote field for inclusion in CSV material."
-(if (string-match "[\",]" s)
-(concat "\"" (mapconcat 'identity (split-string s "\"") "\"\"") "\"")
-s))
+  "Quote field for inclusion in CSV material."
+  (if (string-match "[\",]" s)
+      (concat "\"" (mapconcat 'identity (split-string s "\"") "\"\"") "\"")
+    s))
 
 (defun org-force-self-insert (N)
-"Needed to enforce self-insert under remapping."
-(interactive "p")
-(self-insert-command N))
+  "Needed to enforce self-insert under remapping."
+  (interactive "p")
+  (self-insert-command N))
 
 (defun org-string-width (s)
-"Compute width of string, ignoring invisible characters.
+  "Compute width of string, ignoring invisible characters.
 This ignores character with invisibility property `org-link', and also
 characters with property `org-cwidth', because these will become invisible
 upon the next fontification round."
-(let (b l)
-(when (or (eq t buffer-invisibility-spec)
-	  (assq 'org-link buffer-invisibility-spec))
-(while (setq b (text-property-any 0 (length s)
-				  'invisible 'org-link s))
-  (setq s (concat (substring s 0 b)
-		  (substring s (or (next-single-property-change
-				    b 'invisible s)
-				   (length s)))))))
-(while (setq b (text-property-any 0 (length s) 'org-cwidth t s))
-(setq s (concat (substring s 0 b)
-		(substring s (or (next-single-property-change
-				  b 'org-cwidth s)
-				 (length s))))))
-(setq l (string-width s) b -1)
-(while (setq b (text-property-any (1+ b) (length s) 'org-dwidth t s))
-(setq l (- l (get-text-property b 'org-dwidth-n s))))
-(+ l (calc-display-offset-str s))))
+  (let (b l)
+    (when (or (eq t buffer-invisibility-spec)
+	      (assq 'org-link buffer-invisibility-spec))
+      (while (setq b (text-property-any 0 (length s)
+					'invisible 'org-link s))
+	(setq s (concat (substring s 0 b)
+			(substring s (or (next-single-property-change
+					  b 'invisible s)
+                                         (length s)))))))
+    (while (setq b (text-property-any 0 (length s) 'org-cwidth t s))
+      (setq s (concat (substring s 0 b)
+		      (substring s (or (next-single-property-change
+					b 'org-cwidth s)
+                                       (length s))))))
+    (setq l (string-width s) b -1)
+    (while (setq b (text-property-any (1+ b) (length s) 'org-dwidth t s))
+      (setq l (- l (get-text-property b 'org-dwidth-n s))))
+    (+ l (calc-display-offset-str l))))
 
 (defun org-shorten-string (s maxlength)
-"Shorten string S so tht it is no longer than MAXLENGTH characters.
+  "Shorten string S so tht it is no longer than MAXLENGTH characters.
 If the string is shorter or has length MAXLENGTH, just return the
 original string.  If it is longer, the functions finds a space in the
 string, breaks this string off at that locations and adds three dots
@@ -22179,128 +22179,128 @@ as ellipsis.  Including the ellipsis, the string will not be longer
 than MAXLENGTH.  If finding a good breaking point in the string does
 not work, the string is just chopped off in the middle of a word
 if necessary."
-(if (<= (length s) maxlength)
-s
-(let* ((n (max (- maxlength 4) 1))
-       (re (concat "\\`\\(.\\{1," (int-to-string n) "\\}[^ ]\\)\\([ ]\\|\\'\\)")))
-(if (string-match re s)
-    (concat (match-string 1 s) "...")
-  (concat (substring s 0 (max (- maxlength 3) 0)) "...")))))
+  (if (<= (length s) maxlength)
+      s
+    (let* ((n (max (- maxlength 4) 1))
+	   (re (concat "\\`\\(.\\{1," (int-to-string n) "\\}[^ ]\\)\\([ ]\\|\\'\\)")))
+      (if (string-match re s)
+	  (concat (match-string 1 s) "...")
+	(concat (substring s 0 (max (- maxlength 3) 0)) "...")))))
 
 (defun org-get-indentation (&optional line)
-"Get the indentation of the current line, interpreting tabs.
+  "Get the indentation of the current line, interpreting tabs.
 When LINE is given, assume it represents a line and compute its indentation."
-(if line
-(if (string-match "^ *" (org-remove-tabs line))
-(match-end 0))
-(save-excursion
-(beginning-of-line 1)
-(skip-chars-forward " \t")
-(current-column))))
+  (if line
+      (if (string-match "^ *" (org-remove-tabs line))
+	  (match-end 0))
+    (save-excursion
+      (beginning-of-line 1)
+      (skip-chars-forward " \t")
+      (current-column))))
 
 (defun org-get-string-indentation (s)
-"What indentation has S due to SPACE and TAB at the beginning of the string?"
-(let ((n -1) (i 0) (w tab-width) c)
-(catch 'exit
-(while (< (setq n (1+ n)) (length s))
-  (setq c (aref s n))
-  (cond ((= c ?\ ) (setq i (1+ i)))
-	((= c ?\t) (setq i (* (/ (+ w i) w) w)))
-	(t (throw 'exit t)))))
-i))
+  "What indentation has S due to SPACE and TAB at the beginning of the string?"
+  (let ((n -1) (i 0) (w tab-width) c)
+    (catch 'exit
+      (while (< (setq n (1+ n)) (length s))
+	(setq c (aref s n))
+	(cond ((= c ?\ ) (setq i (1+ i)))
+	      ((= c ?\t) (setq i (* (/ (+ w i) w) w)))
+	      (t (throw 'exit t)))))
+    i))
 
 (defun org-remove-tabs (s &optional width)
-"Replace tabulators in S with spaces.
+  "Replace tabulators in S with spaces.
 Assumes that s is a single line, starting in column 0."
-(setq width (or width tab-width))
-(while (string-match "\t" s)
-(setq s (replace-match
-	 (make-string
-	  (- (* width (/ (+ (match-beginning 0) width) width))
-	     (match-beginning 0)) ?\ )
-	 t t s)))
-s)
+  (setq width (or width tab-width))
+  (while (string-match "\t" s)
+    (setq s (replace-match
+	     (make-string
+	      (- (* width (/ (+ (match-beginning 0) width) width))
+		 (match-beginning 0)) ?\ )
+	     t t s)))
+  s)
 
 (defun org-fix-indentation (line ind)
-"Fix indentation in LINE.
+  "Fix indentation in LINE.
 IND is a cons cell with target and minimum indentation.
 If the current indentation in LINE is smaller than the minimum,
 leave it alone.  If it is larger than ind, set it to the target."
-(let* ((l (org-remove-tabs line))
-(i (org-get-indentation l))
-(i1 (car ind)) (i2 (cdr ind)))
-(if (>= i i2) (setq l (substring line i2)))
-(if (> i1 0)
-(concat (make-string i1 ?\ ) l)
-l)))
+  (let* ((l (org-remove-tabs line))
+	 (i (org-get-indentation l))
+	 (i1 (car ind)) (i2 (cdr ind)))
+    (if (>= i i2) (setq l (substring line i2)))
+    (if (> i1 0)
+	(concat (make-string i1 ?\ ) l)
+      l)))
 
 (defun org-remove-indentation (code &optional n)
-"Remove the maximum common indentation from the lines in CODE.
+  "Remove the maximum common indentation from the lines in CODE.
 N may optionally be the number of spaces to remove."
-(with-temp-buffer
-(insert code)
-(org-do-remove-indentation n)
-(buffer-string)))
+  (with-temp-buffer
+    (insert code)
+    (org-do-remove-indentation n)
+    (buffer-string)))
 
 (defun org-do-remove-indentation (&optional n)
-"Remove the maximum common indentation from the buffer."
-(untabify (point-min) (point-max))
-(let ((min 10000) re)
-(if n
-(setq min n)
-(goto-char (point-min))
-(while (re-search-forward "^ *[^ \n]" nil t)
-  (setq min (min min (1- (- (match-end 0) (match-beginning 0)))))))
-(unless (or (= min 0) (= min 10000))
-(setq re (format "^ \\{%d\\}" min))
-(goto-char (point-min))
-(while (re-search-forward re nil t)
-  (replace-match "")
-  (end-of-line 1))
-min)))
+  "Remove the maximum common indentation from the buffer."
+  (untabify (point-min) (point-max))
+  (let ((min 10000) re)
+    (if n
+	(setq min n)
+      (goto-char (point-min))
+      (while (re-search-forward "^ *[^ \n]" nil t)
+	(setq min (min min (1- (- (match-end 0) (match-beginning 0)))))))
+    (unless (or (= min 0) (= min 10000))
+      (setq re (format "^ \\{%d\\}" min))
+      (goto-char (point-min))
+      (while (re-search-forward re nil t)
+	(replace-match "")
+	(end-of-line 1))
+      min)))
 
 (defun org-fill-template (template alist)
-"Find each %key of ALIST in TEMPLATE and replace it."
-(let ((case-fold-search nil))
-(dolist (entry (sort (copy-sequence alist)
-		     (lambda (a b) (< (length (car a)) (length (car b))))))
-(setq template
-      (replace-regexp-in-string
-       (concat "%" (regexp-quote (car entry)))
-       (or (cdr entry) "") template t t)))
-template))
+  "Find each %key of ALIST in TEMPLATE and replace it."
+  (let ((case-fold-search nil))
+    (dolist (entry (sort (copy-sequence alist)
+                         (lambda (a b) (< (length (car a)) (length (car b))))))
+      (setq template
+	    (replace-regexp-in-string
+	     (concat "%" (regexp-quote (car entry)))
+	     (or (cdr entry) "") template t t)))
+    template))
 
 (defun org-base-buffer (buffer)
-"Return the base buffer of BUFFER, if it has one.  Else return the buffer."
-(if (not buffer)
-buffer
-(or (buffer-base-buffer buffer)
-buffer)))
+  "Return the base buffer of BUFFER, if it has one.  Else return the buffer."
+  (if (not buffer)
+      buffer
+    (or (buffer-base-buffer buffer)
+	buffer)))
 
 (defun org-wrap (string &optional width lines)
-"Wrap string to either a number of lines, or a width in characters.
+  "Wrap string to either a number of lines, or a width in characters.
 If WIDTH is non-nil, the string is wrapped to that width, however many lines
 that costs.  If there is a word longer than WIDTH, the text is actually
 wrapped to the length of that word.
 IF WIDTH is nil and LINES is non-nil, the string is forced into at most that
 many lines, whatever width that takes.
 The return value is a list of lines, without newlines at the end."
-(let* ((words (org-split-string string "[ \t\n]+"))
-       (maxword (apply 'max (mapcar 'org-string-width words)))
-       w ll)
-  (cond (width
-	 (org-do-wrap words (max maxword width)))
-	(lines
-	 (setq w maxword)
-	 (setq ll (org-do-wrap words maxword))
-	 (if (<= (length ll) lines)
-	     ll
-	   (setq ll words)
-	   (while (> (length ll) lines)
-	     (setq w (1+ w))
-	     (setq ll (org-do-wrap words w)))
-	   ll))
-	(t (error "Cannot wrap this")))))
+  (let* ((words (org-split-string string "[ \t\n]+"))
+	 (maxword (apply 'max (mapcar 'org-string-width words)))
+	 w ll)
+    (cond (width
+	   (org-do-wrap words (max maxword width)))
+	  (lines
+	   (setq w maxword)
+	   (setq ll (org-do-wrap words maxword))
+	   (if (<= (length ll) lines)
+	       ll
+	     (setq ll words)
+	     (while (> (length ll) lines)
+	       (setq w (1+ w))
+	       (setq ll (org-do-wrap words w)))
+	     ll))
+	  (t (error "Cannot wrap this")))))
 
 (defun org-do-wrap (words width)
   "Create lines of maximum width WIDTH (in characters) from word list WORDS."
