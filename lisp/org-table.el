@@ -101,7 +101,7 @@ insertion of the tempate.  The transformed table will later be inserted
 between these lines.
 
 The template should also contain a minimal table in a multiline comment.
-If multiline comments are not possible in the buffer language,
+If multiline comments are not possible in the buffer language, 
 you can pack it into a string that will not be used when the code
 is compiled or executed.  Above the table will you need a line with
 the fixed string \"#+ORGTBL: SEND\", followed by instruction on how to
@@ -760,8 +760,11 @@ When nil, simply write \"#ERROR\" in corrupted fields.")
 	 emptystrings links dates emph raise narrow
 	 falign falign1 fmax f1 len c e space)
     (untabify beg end)
+    ;; <CODE-CHANGE> do not clear diplay text-properties to preserver Clojure
+    ;; symbols
     (remove-text-properties beg end '(org-cwidth t org-dwidth t))
-;;    (remove-text-properties beg end '(org-cwidth t org-dwidth t display t))
+    ;; (remove-text-properties beg end '(org-cwidth t org-dwidth t display t))
+    ;; </CODE-CHANGE>
     ;; Check if we have links or dates
     (goto-char beg)
     (setq links (re-search-forward org-bracket-link-regexp end t))
@@ -843,19 +846,22 @@ When nil, simply write \"#ERROR\" in corrupted fields.")
 		  (setq f1 (min fmax (or (string-match org-bracket-link-regexp xx) fmax)))
 		  (unless (> f1 1)
 		    (user-error "Cannot narrow field starting with wide link \"%s\""
-			   (match-string 0 xx)))
+				(match-string 0 xx)))
 		  (add-text-properties f1 (length xx) (list 'org-cwidth t) xx)
 		  (add-text-properties (- f1 2) f1
 				       (list 'display org-narrow-column-arrow)
 				       xx)))))
       ;; Get the maximum width for each column
+      ;; <CODE-CHANGE> adjust for display offset
       (push (apply 'max (or fmax 1) 1
 		   (mapcar
 		    (lambda (s)
-		      (message "%S + %S" (org-string-width s) (calc-display-offset-str s))
+		      ;;%DEBUG% (message "%S + %S" (org-string-width s)
+		      ;;%DEBUG%   (calc-display-offset-str s))
 		      (+ (org-string-width s) (calc-display-offset-str s)))
 		    column))
 	    lengths)
+      ;; </CODE-CHANGE>
       ;; Get the fraction of numbers, to decide about alignment of the column
       (if falign1
 	  (push (equal (downcase falign1) "r") typenums)
@@ -893,14 +899,7 @@ When nil, simply write \"#ERROR\" in corrupted fields.")
 				    (concat (car c) space))))))))
 
     ;; Compute the formats needed for output of the table
-;;    (setq rfmt (concat indent "|") hfmt (concat indent "|"))
-    ;; (while (setq l (pop lengths))
-    ;;   (setq ty (if (pop typenums) "" "-")) ; number types flushright
-    ;;   (setq rfmt (concat rfmt (format rfmt1 ty l))
-    ;; 	    hfmt (concat hfmt (format hfmt1 (make-string l ?-)))))
-    ;; (setq rfmt (concat rfmt "\n")
-    ;; 	  hfmt (concat (substring hfmt 0 -1) "|\n"))
-
+    ;; <CODE-CHANGE> adjusting for Clojure symbols
     (setq new (mapconcat
 	       (lambda (l)
 		 (setq tmp-hfmt hfmt)
@@ -914,12 +913,14 @@ When nil, simply write \"#ERROR\" in corrupted fields.")
 		   (setq ty (if (pop tnums) "" "-")) ; number types flushright
 		   (setq len (- len (calc-display-offset-str f)))
 		   (setq tmp-rfmt (concat tmp-rfmt (format rfmt1 ty len))
-			 tmp-hfmt (concat tmp-hfmt (format hfmt1 (make-string len ?-)))))
+			 tmp-hfmt (concat tmp-hfmt (format hfmt1
+							   (make-string len ?-)))))
 		 (setq tmp-rfmt (concat tmp-rfmt "\n")
 		       tmp-hfmt (concat (substring tmp-hfmt 0 -1) "|\n"))
 		 (if l (apply 'format tmp-rfmt fs)
 		   tmp-hfmt))
 	       lines ""))
+    ;; </CODE-CHANGE>
     (move-marker org-table-aligned-begin-marker (point))
     (insert new)
     ;; Replace the old one
